@@ -1,0 +1,8 @@
+# Normal starten → zeigt alle Input-Devices und startet mit Auto-Loopback
+python vrm_avatar_server.py
+
+# Device 2 explizit wählen (z.B. dein Mikrofon)
+python vrm_avatar_server.py -2
+
+# Nur Device-Liste anzeigen, nicht starten
+python vrm_avatar_server.py --list
