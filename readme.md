@@ -1,7 +1,3 @@
-Hier ist die angepasste und sehr ausführliche `README.md` für SOPHIE v3.6.
-
-***
-
 # M-ASSISTANT
 
 ![Sophie UI Banner](img/woiswas.png)
@@ -189,3 +185,4 @@ _For more information, visit [moritzsoft.de](https://moritzsoft.de)_
 
 
 </details>
+
