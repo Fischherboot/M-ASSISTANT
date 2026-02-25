@@ -474,24 +474,43 @@ HTML_CONTENT = r"""<!DOCTYPE html>
     }
   }
 
-  // ── Multi-Viseme Lipsync ──────────────────────────────────────────────────
+// ── Multi-Viseme Lipsync (Angepasst: Mund geht weniger weit auf) ──────────
   let pAa=0,pIh=0,pOu=0,pEe=0,pOh=0;
   function updateLipSync(){
     if(!vrm?.expressionManager)return;
     const em=vrm.expressionManager;
+
+    // Schwelle ab wann gesprochen wird
     if(audioLevel<0.02){
       const f=0.85;pAa*=f;pIh*=f;pOu*=f;pEe*=f;pOh*=f;
       safeSet(em,'aa',pAa);safeSet(em,'ih',pIh);safeSet(em,'ou',pOu);safeSet(em,'ee',pEe);safeSet(em,'oh',pOh);
       return;
     }
-    const[nL,nML,nMH,nH]=fftBands,a=audioLevel;
-    let tAa=Math.min(nL*1.4*a*2,1),tOh=Math.min((nL*.5+nML*.5)*a*1.6,.8),
-        tIh=Math.min((nML*.8+nH*.4)*a*1.6,.7),tEe=Math.min(nMH*1.2*a*1.8,.7),
-        tOu=Math.min((nMH*.6+nL*.3)*a*1.4,.6);
-    if(tAa+tIh+tOu+tEe+tOh<0.15)tAa=Math.max(a*.5,.15);
-    const s=0.35;
+
+    const[nL,nML,nMH,nH]=fftBands;
+    
+    // 1. GLOBALER REGLER: Hier kannst du alles auf einmal steuern.
+    // 1.0 = Original, 0.5 = Alles nur halb so stark.
+    const sensitivity = 0.6; 
+    const a = audioLevel * sensitivity;
+
+    // 2. FEINTUNING: Die Zahlen am Ende (z.B. 0.6) sind das maximale Limit (0.0 bis 1.0)
+    // tAa (Aaa-Laut) ist meistens der Mund, der zu weit aufgeht. Habe ihn auf max 0.6 (60%) begrenzt.
+    let tAa = Math.min(nL*1.4*a*2.0, 0.60),  // War Limit 1.0
+        tOh = Math.min((nL*.5+nML*.5)*a*1.6, 0.50), // War Limit .8
+        tIh = Math.min((nML*.8+nH*.4)*a*1.6, 0.40), // War Limit .7
+        tEe = Math.min(nMH*1.2*a*1.8, 0.40), // War Limit .7
+        tOu = Math.min((nMH*.6+nL*.3)*a*1.4, 0.40); // War Limit .6
+
+    // Kleiner Boost, damit der Mund bei leisen Tönen nicht komplett zu bleibt
+    if(tAa+tIh+tOu+tEe+tOh < 0.10) {
+        tAa = Math.max(a * 0.5, 0.10);
+    }
+
+    const s=0.35; // Glättungsfaktor (nicht ändern)
     pAa+=(tAa-pAa)*(1-s);pIh+=(tIh-pIh)*(1-s);pOu+=(tOu-pOu)*(1-s);
     pEe+=(tEe-pEe)*(1-s);pOh+=(tOh-pOh)*(1-s);
+
     safeSet(em,'aa',clamp(pAa));safeSet(em,'ih',clamp(pIh));safeSet(em,'ou',clamp(pOu));
     safeSet(em,'ee',clamp(pEe));safeSet(em,'oh',clamp(pOh));
   }
